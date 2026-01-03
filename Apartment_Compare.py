@@ -431,7 +431,7 @@ for n_0 in [100, 200, 500, 1000, 2000]:
     X0_test_tensor, Y0_test_tensor = to_tensor(X0_test, Y0_test)
 
     # Initialize model
-    model = TargetCNN(d=d)
+    model = TargetCNN(d=X0_train.shape[1])
     optimizer = optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-5)
     criterion = nn.MSELoss()
 
@@ -485,7 +485,7 @@ for n_0 in [100, 200, 500, 1000, 2000]:
     Y_train = np.concatenate([Y_source, Y_target])
     domain_ids_train = np.concatenate([domain_ids_source, domain_ids_target])
     # Train DARC feature extractor
-    F = FeatureExtractor(input_dim=d, domain_dim=num_source_domains+1, feature_dim=2)
+    F = FeatureExtractor(input_dim=X_train.shape[1], domain_dim=num_source_domains+1, feature_dim=2)
     F = train_feature_extractor(F, X_train, Y_train, domain_ids_train, epochs=1000, lr=1e-3)
     # Train linear regressor on constructed space
     R = LinearRegressor(feature_dim=2)
