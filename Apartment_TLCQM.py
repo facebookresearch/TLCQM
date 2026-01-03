@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 @author: Yikun Zhang
-Last Editing: Jan 2, 2025
+Last Editing: Jan 2, 2026
 
 Description: Application to the UCI Apartment for rent data.
 It contains XGBoost, kernel ridge regression, and neural network models
@@ -28,13 +28,9 @@ print(job_id)
 # =======================================================================================#
 
 # Read the data and preprocessing
-data_raw = pd.read_csv(
-    "data/apartments_for_rent_classified_100K.csv",
-    encoding="latin1",
-    engine="python",
-    on_bad_lines="skip",
-    sep=";",
-)
+data_raw = pd.read_csv("data/apartments_for_rent_classified_100K.csv", 
+                       encoding="latin1", engine="python", on_bad_lines="skip",
+                       sep=";")
 
 # Filter the Outliers
 data_ap = data_raw[data_raw.price.notna()]  # filter only those with a known price
@@ -60,8 +56,7 @@ col_subset = [
     "has_photo",
     "pets_allowed",
     "square_feet",
-    "price",
-]
+    "price"]
 data_ap = data_ap.loc[:, col_subset]
 
 # 4 Most common amenities converted to binary features
@@ -78,7 +73,7 @@ data_ap["Dogs"] = data_ap["pets_allowed"].str.contains("Dogs", na=False).astype(
 data_ap.loc[data_ap["bathrooms"].isna(), "bathrooms"] = 0
 data_ap.loc[data_ap["bedrooms"].isna(), "bedrooms"] = 0
 
-source_domain = ["CA", "TX", "VA", "NC", "CO"]
+source_domain = ["CA", "TX", "VA", "NC"]
 target_domain = "FL"
 
 # Prepare data for the source domains
@@ -148,7 +143,7 @@ for n_0 in [100, 200, 500, 1000, 2000]:
         ],
     ]
     data_sub["price"] = np.log(data_sub["price"])
-    dat0 = data_sub.sample(n=n_0, random_state=42)
+    dat0 = data_sub.sample(n=n_0, random_state=job_id)
     dat_pool.append(dat0)
     # Use the remaining rows for testing
     dat_test0 = data_sub.drop(dat0.index)
