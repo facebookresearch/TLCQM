@@ -11,7 +11,6 @@ This file contains code for transfer learning models to be compared with.
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import GridSearchCV
-from utils import sim_data
 from sklearn.kernel_ridge import KernelRidge
 from sklearn.model_selection import train_test_split
 from itertools import combinations
