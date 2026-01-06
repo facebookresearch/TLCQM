@@ -8,35 +8,40 @@ Description: Application to the UCI Apartment for rent data.
 This file contains code for transfer learning models to be compared with.
 """
 
+import sys
+from itertools import combinations
+
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import GridSearchCV
-from sklearn.kernel_ridge import KernelRidge
-from sklearn.model_selection import train_test_split
-from itertools import combinations
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import sys
+from sklearn.kernel_ridge import KernelRidge
+from sklearn.model_selection import GridSearchCV, train_test_split
 
 job_id = int(sys.argv[1])
 print(job_id)
 
-#=======================================================================================#
+# =======================================================================================#
+
 
 def fit_krr(X, Y, alpha_grid=None):
     if alpha_grid is None:
         alpha_grid = 0.1 / X.shape[0] * (3.0 ** np.arange(-3, 7))
-    param_grid = {'alpha': alpha_grid}
+    param_grid = {"alpha": alpha_grid}
     krr = KernelRidge(kernel="rbf")
     grid_search = GridSearchCV(krr, param_grid, cv=5, scoring="neg_mean_squared_error")
     grid_search.fit(X, Y)
     return grid_search.best_estimator_
+
+
 def rkhs_norm(f1, f2, X):
     # Use L2 norm of predictions as a proxy for RKHS norm
     return np.linalg.norm(f1.predict(X) - f2.predict(X))
 
-#=======================================================================================#
+
+# =======================================================================================#
+
 
 # Example TargetCNN definition for d=5
 class TargetCNN(nn.Module):
@@ -59,28 +64,31 @@ class TargetCNN(nn.Module):
         target_list = [inter_x1, inter_x2, inter_x3]
         return target_list, result
 
+
 def to_tensor(X, Y):
     X_tensor = torch.tensor(X, dtype=torch.float32)
     Y_tensor = torch.tensor(Y, dtype=torch.float32).reshape(-1, 1)
     return X_tensor, Y_tensor
+
 
 def rbf_kernel(X, Y, gamma=0.4):
     # X: (n_samples_X, n_features)
     # Y: (n_samples_Y, n_features)
     X = X if X.ndim == 2 else X.view(X.size(0), -1)
     Y = Y if Y.ndim == 2 else Y.view(Y.size(0), -1)
-    XX = torch.sum(X ** 2, 1).view(-1, 1)
-    YY = torch.sum(Y ** 2, 1).view(1, -1)
+    XX = torch.sum(X**2, 1).view(-1, 1)
+    YY = torch.sum(Y**2, 1).view(1, -1)
     distances = XX + YY - 2 * torch.mm(X, Y.t())
     K = torch.exp(-gamma * distances)
     return K
 
+
 def MLcon_kernel(source_list, source_pred, target_list, target_y, lamda=1.0):
     # Use only the first layer's features for simplicity
     X_p = source_list[0]  # (n_source, n_features)
-    Y_p = source_pred     # (n_source, 1)
+    Y_p = source_pred  # (n_source, 1)
     X_q = target_list[0]  # (n_target, n_features)
-    Y_q = target_y        # (n_target, 1)
+    Y_q = target_y  # (n_target, 1)
 
     np_ = X_p.shape[0]
     nq_ = X_q.shape[0]
@@ -112,9 +120,11 @@ def MLcon_kernel(source_list, source_pred, target_list, target_y, lamda=1.0):
     out = out1 + out2 - 2 * out3
     return out
 
-#=======================================================================================#
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+# =======================================================================================#
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 
 class FeatureExtractor(nn.Module):
     def __init__(self, input_dim, domain_dim, feature_dim=2):
@@ -125,7 +135,7 @@ class FeatureExtractor(nn.Module):
             nn.ReLU(),
             nn.Linear(100, 100),
             nn.ReLU(),
-            nn.Linear(100, feature_dim)
+            nn.Linear(100, feature_dim),
         )
 
     def forward(self, x, domain_id):
@@ -133,10 +143,12 @@ class FeatureExtractor(nn.Module):
         x_cat = torch.cat([x, domain_vec], dim=1)
         return self.mlp(x_cat)
 
+
 def psp_loss(features, labels):
     dist_matrix = torch.cdist(features, features, p=2)
     label_matrix = torch.abs(labels.unsqueeze(0) - labels.unsqueeze(1))
     return nn.functional.mse_loss(dist_matrix, label_matrix)
+
 
 class LinearRegressor(nn.Module):
     def __init__(self, feature_dim):
@@ -145,6 +157,7 @@ class LinearRegressor(nn.Module):
 
     def forward(self, features):
         return self.linear(features).squeeze(-1)
+
 
 def train_feature_extractor(F, X, Y, domain_ids, epochs=1000, lr=1e-3):
     F = F.to(device)
@@ -159,9 +172,10 @@ def train_feature_extractor(F, X, Y, domain_ids, epochs=1000, lr=1e-3):
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-        if (epoch+1) % 100 == 0:
+        if (epoch + 1) % 100 == 0:
             print(f"Epoch {epoch+1}, PSP Loss: {loss.item():.4f}")
     return F
+
 
 def train_regressor(F, R, X, Y, domain_ids, epochs=1000, lr=1e-3):
     F = F.to(device)
@@ -180,17 +194,22 @@ def train_regressor(F, R, X, Y, domain_ids, epochs=1000, lr=1e-3):
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-        if (epoch+1) % 100 == 0:
+        if (epoch + 1) % 100 == 0:
             print(f"Epoch {epoch+1}, Regressor Loss: {loss.item():.4f}")
     return R
 
-#=======================================================================================#
+
+# =======================================================================================#
 
 
 # Read the data and preprocessing
-data_raw = pd.read_csv("data/apartments_for_rent_classified_100K.csv", 
-                       encoding="latin1", engine="python", on_bad_lines="skip",
-                       sep=";")
+data_raw = pd.read_csv(
+    "data/apartments_for_rent_classified_100K.csv",
+    encoding="latin1",
+    engine="python",
+    on_bad_lines="skip",
+    sep=";",
+)
 
 # Filter the Outliers
 data_ap = data_raw[data_raw.price.notna()]  # filter only those with a known price
@@ -216,7 +235,8 @@ col_subset = [
     "has_photo",
     "pets_allowed",
     "square_feet",
-    "price"]
+    "price",
+]
 data_ap = data_ap.loc[:, col_subset]
 
 # 4 Most common amenities converted to binary features
@@ -357,7 +377,7 @@ for n_0 in [100, 200, 300, 500]:
     dat_pool_test0 = dat_pool.iloc[n_pool:, :].values
     dat_pool = dat_pool.iloc[:n_pool, :].values
     dat_test = dat_test0.values
-    
+
     # Prepare data
     X_source = [dat[:, 1:] for dat in dat_source]
     Y_source = [dat[:, 0] for dat in dat_source]
@@ -371,7 +391,9 @@ for n_0 in [100, 200, 300, 500]:
     # --- Step 1: Split target data into T1 and T2 ---
     X0_T1, X0_T2, Y0_T1, Y0_T2 = train_test_split(X0, Y0, test_size=0.5, random_state=0)
     # Further split T2 into T21 and T22 for aggregation
-    X0_T21, X0_T22, Y0_T21, Y0_T22 = train_test_split(X0_T2, Y0_T2, test_size=0.5, random_state=0)
+    X0_T21, X0_T22, Y0_T21, Y0_T22 = train_test_split(
+        X0_T2, Y0_T2, test_size=0.5, random_state=0
+    )
     # --- Step 2: Fit KRR on each source and T1 ---
     fb0 = fit_krr(X0_T1, Y0_T1)  # Target model on T1
     fbk_list = [fit_krr(Xk, Yk) for Xk, Yk in zip(X_source, Y_source)]  # Source models
@@ -380,29 +402,38 @@ for n_0 in [100, 200, 300, 500]:
     ranks = np.argsort(norms)  # Indices of sources sorted by similarity
     # --- Step 4: Build candidate models using increasing numbers of sources ---
     candidate_models = [fb0]  # fb0 corresponds to Ab0 = ∅
-    for ell in range(1, m+1):
+    for ell in range(1, m + 1):
         selected_indices = ranks[:ell]
         # Combine selected sources and T1
-        X_comb = np.concatenate([X_source[i] for i in selected_indices] + [X0_T1], axis=0)
-        Y_comb = np.concatenate([Y_source[i] for i in selected_indices] + [Y0_T1], axis=0)
+        X_comb = np.concatenate(
+            [X_source[i] for i in selected_indices] + [X0_T1], axis=0
+        )
+        Y_comb = np.concatenate(
+            [Y_source[i] for i in selected_indices] + [Y0_T1], axis=0
+        )
         # Transferring step
         comb_krr = fit_krr(X_comb, Y_comb)
         # Debiasing step
         Y0_pred = comb_krr.predict(X0_T1)
         Y_resi = Y0_T1 - Y0_pred
         resi_krr = fit_krr(X0_T1, Y_resi)
+
         # Final model: sum of transferring and debiasing
         class CombinedModel:
             def __init__(self, m1, m2):
                 self.m1 = m1
                 self.m2 = m2
+
             def predict(self, X):
                 return self.m1.predict(X) + self.m2.predict(X)
+
         fb_ell = CombinedModel(comb_krr, resi_krr)
         candidate_models.append(fb_ell)
     # --- Step 5: Hyper-sparse aggregation (convex combination of at most two models) ---
     # Evaluate risk on T21 for each candidate
-    risks = [np.mean((model.predict(X0_T21) - Y0_T21)**2) for model in candidate_models]
+    risks = [
+        np.mean((model.predict(X0_T21) - Y0_T21) ** 2) for model in candidate_models
+    ]
     best_idx = np.argmin(risks)
     # Find best convex combination of two models
     min_risk = risks[best_idx]
@@ -413,22 +444,25 @@ for n_0 in [100, 200, 300, 500]:
         preds_j = candidate_models[j].predict(X0_T21)
         t_vals = np.linspace(0, 1, 101)
         for t in t_vals:
-            preds = t * preds_i + (1-t) * preds_j
-            risk = np.mean((preds - Y0_T21)**2)
+            preds = t * preds_i + (1 - t) * preds_j
+            risk = np.mean((preds - Y0_T21) ** 2)
             if risk < min_risk:
                 min_risk = risk
                 best_combo = (i, j, t)
     # Build final aggregated model
     i, j, t = best_combo
+
     class AggregatedModel:
         def __init__(self, m1, m2, t):
             self.m1 = m1
             self.m2 = m2
             self.t = t
+
         def predict(self, X):
             if self.m2 is None:
                 return self.m1.predict(X)
-            return self.t * self.m1.predict(X) + (1-self.t) * self.m2.predict(X)
+            return self.t * self.m1.predict(X) + (1 - self.t) * self.m2.predict(X)
+
     if j is not None:
         fba = AggregatedModel(candidate_models[i], candidate_models[j], t)
     else:
@@ -436,7 +470,6 @@ for n_0 in [100, 200, 300, 500]:
     # --- Step 6: Evaluate on test set ---
     Y0_pred_new = fba.predict(X0_test)
     tkrr_mse = np.mean((Y0_pred_new - Y0_test) ** 2)
-
 
     # CDAR
     # Prepare data
@@ -448,7 +481,9 @@ for n_0 in [100, 200, 300, 500]:
     Y0_test = dat_test[:, 0]
 
     # Convert to tensors
-    X_source_tensor, Y_source_tensor = to_tensor(X_source[0], Y_source[0])  # Use first source domain
+    X_source_tensor, Y_source_tensor = to_tensor(
+        X_source[0], Y_source[0]
+    )  # Use first source domain
     X0_train_tensor, Y0_train_tensor = to_tensor(X0_train, Y0_train)
     X0_test_tensor, Y0_test_tensor = to_tensor(X0_test, Y0_test)
 
@@ -470,9 +505,7 @@ for n_0 in [100, 200, 300, 500]:
         target_list, target_pred = model(X0_train_tensor)
 
         # Compute CEOD loss (replace with your actual implementation)
-        CEOD_loss = MLcon_kernel(
-        source_list, source_pred, target_list, Y0_train_tensor
-        )
+        CEOD_loss = MLcon_kernel(source_list, source_pred, target_list, Y0_train_tensor)
 
         # Hybrid loss
         loss = Lambda * criterion(target_pred, Y0_train_tensor) + Beta * CEOD_loss
@@ -488,27 +521,32 @@ for n_0 in [100, 200, 300, 500]:
         y_pred = y_pred.numpy().flatten()
         cdar_mse = np.mean((Y0_test - y_pred) ** 2)
 
-
     # DARC
     # Multi-source domains
     num_source_domains = len(dat_source)
     # Stack all source domains
     X_source = np.vstack([dat[:, 1:] for dat in dat_source])
     Y_source = np.concatenate([dat[:, 0] for dat in dat_source])
-    domain_ids_source = np.concatenate([
-        np.full(len(dat_source[i]), i, dtype=int) for i in range(num_source_domains)
-    ])
+    domain_ids_source = np.concatenate(
+        [np.full(len(dat_source[i]), i, dtype=int) for i in range(num_source_domains)]
+    )
     # Target domain
     X_target = dat0[:, 1:]
     Y_target = dat0[:, 0]
-    domain_ids_target = np.full(len(X_target), num_source_domains, dtype=int)  # Target domain ID
+    domain_ids_target = np.full(
+        len(X_target), num_source_domains, dtype=int
+    )  # Target domain ID
     # Combine for training
     X_train = np.vstack([X_source, X_target])
     Y_train = np.concatenate([Y_source, Y_target])
     domain_ids_train = np.concatenate([domain_ids_source, domain_ids_target])
     # Train DARC feature extractor
-    F = FeatureExtractor(input_dim=X_train.shape[1], domain_dim=num_source_domains+1, feature_dim=2)
-    F = train_feature_extractor(F, X_train, Y_train, domain_ids_train, epochs=1000, lr=1e-3)
+    F = FeatureExtractor(
+        input_dim=X_train.shape[1], domain_dim=num_source_domains + 1, feature_dim=2
+    )
+    F = train_feature_extractor(
+        F, X_train, Y_train, domain_ids_train, epochs=1000, lr=1e-3
+    )
     # Train linear regressor on constructed space
     R = LinearRegressor(feature_dim=2)
     R = train_regressor(F, R, X_train, Y_train, domain_ids_train, epochs=1000, lr=1e-3)
@@ -521,8 +559,7 @@ for n_0 in [100, 200, 300, 500]:
     with torch.no_grad():
         features_test = F(X_test_torch, domain_ids_test_torch)
         preds = R(features_test).cpu().numpy()
-    darc_mse = np.mean((preds - Y_test)**2)
-
+    darc_mse = np.mean((preds - Y_test) ** 2)
 
     # Save results
     mse = np.array([tkrr_mse, cdar_mse, darc_mse])
@@ -531,4 +568,4 @@ for n_0 in [100, 200, 300, 500]:
     res_df["target_size"] = n_0
     res_full = pd.concat([res_full, res_df], axis=0)
 
-res_full.to_csv('./Results/Apartment_'+str(job_id)+'_Compare.csv', index=False)
+res_full.to_csv("./Results/Apartment_" + str(job_id) + "_Compare.csv", index=False)
