@@ -233,7 +233,7 @@ data_ap["Dogs"] = data_ap["pets_allowed"].str.contains("Dogs", na=False).astype(
 data_ap.loc[data_ap["bathrooms"].isna(), "bathrooms"] = 0
 data_ap.loc[data_ap["bedrooms"].isna(), "bedrooms"] = 0
 
-source_domain = ["CA", "TX", "VA", "NC"]
+source_domain = ["CA", "TX", "VA"]
 target_domain = "FL"
 
 # Prepare data for the source domains
@@ -260,9 +260,30 @@ for s in source_domain:
     dat1 = np.column_stack([Y_sub, X_sub])
     dat_source.append(dat1)
 
+dat_pool = []
+for s in source_domain:
+    data_sub = data_ap.loc[
+        data_ap["state"] == s,
+        [
+            "price",
+            "state",
+            "bathrooms",
+            "bedrooms",
+            "has_photo",
+            "square_feet",
+            "Parking",
+            "Storage",
+            "Gym",
+            "Pool",
+            "Cats",
+            "Dogs",
+        ],
+    ]
+    data_sub["price"] = np.log(data_sub["price"])
+    dat_pool.append(data_sub)
 
 res_full = pd.DataFrame()
-for n_0 in [100, 200, 500, 1000, 2000]:
+for n_0 in [100, 200, 300, 500]:
     data_sub = data_ap.loc[
         data_ap["state"] == target_domain,
         [

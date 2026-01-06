@@ -34,7 +34,7 @@ for n_0 in [50, 100, 150, 200, 250]:
     for n_s in [100, 200, 500, 1000, 2000, 5000]:
         d = 5
         np.random.seed(job_id)
-        dat_source, dat0, dat0_full, dat_test = sim_data(n_s=n_s, n_0=n_0, n_test=5000, d=d, sig=0.5, 
+        dat_source, dat0, dat0_full, dat_test = sim_data(n_s=n_s, n_0=n_0, n_test=3000, d=d, sig=0.5, 
                                                         mu_s=np.ones(d), mu_t=np.zeros(d), Sigma=np.eye(d), beta1=1/np.arange(1, d+1))
         
         # Target-only ML models
@@ -127,7 +127,7 @@ for n_0 in [50, 100, 150, 200, 250]:
         for i in range(len(dat_source)):
             Y_tensor = torch.tensor(dat_source[i][:, 0].reshape(-1,1), dtype=torch.float32)
             X_tensor = torch.tensor(dat_source[i][:, 1:], dtype=torch.float32)
-            engressor = engression(X_tensor, Y_tensor, num_layer=2, hidden_dim=100, noise_dim=100, lr=0.0001, num_epochs=1000)
+            engressor = engression(X_tensor, Y_tensor, num_layer=2, hidden_dim=100, noise_dim=5, lr=0.001, num_epochs=1000)
             X_source_tensor.append(X_tensor)
             eng_mod.append(engressor)
         X_dat0_tensor = torch.tensor(X_dat0, dtype=torch.float32)
@@ -141,11 +141,12 @@ for n_0 in [50, 100, 150, 200, 250]:
         Y0_sam = np.concatenate(Y0_sam, axis=1)
         Y0_sam_arr = np.concatenate([np.ones([Y0_sam.shape[0],1]), Y0_sam], axis=1)
 
+        # Perform quantile matching to learn the adjustment coefficients
         beta_sol = quantile_matching_estimate(np.repeat(Y0, N_sam), Y0_sam_arr, beta_init=None, stop_eps=1e-8, max_iter=1000, verbose=False)
 
         Y_source_pred = []
         for i in range(len(eng_mod)):
-            Y_source_pred.append(eng_mod[i].predict(X_source_tensor, sample_size=100).detach().numpy().reshape(-1,1))
+            Y_source_pred.append(eng_mod[i].predict(X_source_tensor, sample_size=200).detach().numpy().reshape(-1,1))
         Y_source_pred = np.concatenate(Y_source_pred, axis=1)
         Y_source_pred = np.concatenate([np.ones([Y_source_pred.shape[0],1]), Y_source_pred], axis=1)
         Y_matched = np.dot(Y_source_pred, beta_sol)
@@ -202,6 +203,6 @@ for n_0 in [50, 100, 150, 200, 250]:
         res_df['target_size'] = n_0
         res_full = pd.concat([res_full, res_df], axis=0)
 
-res_full.to_csv('./Results/Simulation_Concept_Covariate_'+str(job_id)+'.csv', index=False)
+res_full.to_csv('./Results/Simulation_Concept_Covariate_'+str(job_id)+'_new2.csv', index=False)
 
 

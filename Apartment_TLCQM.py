@@ -73,7 +73,7 @@ data_ap["Dogs"] = data_ap["pets_allowed"].str.contains("Dogs", na=False).astype(
 data_ap.loc[data_ap["bathrooms"].isna(), "bathrooms"] = 0
 data_ap.loc[data_ap["bedrooms"].isna(), "bedrooms"] = 0
 
-source_domain = ["CA", "TX", "VA", "NC"]
+source_domain = ["IL", "TN", "WA"]
 target_domain = "FL"
 
 # Prepare data for the source domains
@@ -123,8 +123,9 @@ for s in source_domain:
     dat_pool.append(data_sub)
 
 
-res_full = pd.DataFrame()
-for n_0 in [100, 200, 500, 1000, 2000]:
+for n_0 in [100, 200, 300, 500]:
+    if n_0 == 100:
+        res_full = pd.DataFrame()
     data_sub = data_ap.loc[
         data_ap["state"] == target_domain,
         [
@@ -243,48 +244,48 @@ for n_0 in [100, 200, 500, 1000, 2000]:
     nn_to = np.mean(abs(target_only_mlp.predict(X_test) - Y_test) ** 2)
 
     # ML models on Pooled Data
-    X0_full = dat_pool[:, 1:]
-    Y0_full = dat_pool[:, 0]
-    X_test = dat_pool_test0[:, 1:]
-    Y_test = dat_pool_test0[:, 0]
+    # X0_full = dat_pool[:, 1:]
+    # Y0_full = dat_pool[:, 0]
+    # X_test = dat_pool_test0[:, 1:]
+    # Y_test = dat_pool_test0[:, 0]
 
-    ## XGBoost
-    param_grid = {
-        "learning_rate": [0.001, 0.01, 0.1],
-        "n_estimators": [10, 50, 100],
-        "max_depth": [3, 5],
-        "subsample": [0.8, 1.0],
-        "colsample_bytree": [0.8, 1.0],
-    }
-    xgb_model = XGBRegressor(objective="reg:squarederror", random_state=0)
-    grid_search = GridSearchCV(
-        xgb_model, param_grid, cv=5, scoring="neg_mean_squared_error"
-    )
-    grid_search.fit(X0_full, Y0_full)
-    target_only_xgb = grid_search.best_estimator_
-    xbg_pool = np.mean(abs(target_only_xgb.predict(X_test) - Y_test) ** 2)
+    # ## XGBoost
+    # param_grid = {
+    #     "learning_rate": [0.001, 0.01, 0.1],
+    #     "n_estimators": [10, 50, 100],
+    #     "max_depth": [3, 5],
+    #     "subsample": [0.8, 1.0],
+    #     "colsample_bytree": [0.8, 1.0],
+    # }
+    # xgb_model = XGBRegressor(objective="reg:squarederror", random_state=0)
+    # grid_search = GridSearchCV(
+    #     xgb_model, param_grid, cv=5, scoring="neg_mean_squared_error"
+    # )
+    # grid_search.fit(X0_full, Y0_full)
+    # target_only_xgb = grid_search.best_estimator_
+    # xbg_pool = np.mean(abs(target_only_xgb.predict(X_test) - Y_test) ** 2)
 
-    ## Kernel Ridge Regression
-    alpha_lst = 0.1 / X0_full.shape[0] * (3.0 ** np.array(range(-2, 6)))
-    param_grid = {"alpha": alpha_lst}
-    target_only_krr = KernelRidge(kernel="rbf")
-    grid_search = GridSearchCV(
-        target_only_krr, param_grid, cv=5, scoring="neg_mean_squared_error"
-    )
-    grid_search.fit(X0_full, Y0_full)
-    target_only_krr = grid_search.best_estimator_
-    krr_pool = np.mean(abs(target_only_krr.predict(X_test) - Y_test) ** 2)
+    # ## Kernel Ridge Regression
+    # alpha_lst = 0.1 / X0_full.shape[0] * (3.0 ** np.array(range(-2, 6)))
+    # param_grid = {"alpha": alpha_lst}
+    # target_only_krr = KernelRidge(kernel="rbf")
+    # grid_search = GridSearchCV(
+    #     target_only_krr, param_grid, cv=5, scoring="neg_mean_squared_error"
+    # )
+    # grid_search.fit(X0_full, Y0_full)
+    # target_only_krr = grid_search.best_estimator_
+    # krr_pool = np.mean(abs(target_only_krr.predict(X_test) - Y_test) ** 2)
 
-    ## Neural Network
-    param_grid = {
-        "hidden_layer_sizes": [(10,), (50,), (100,)],
-        "alpha": [0.0001, 0.001, 0.01],
-    }
-    mlp = MLPRegressor(max_iter=1000, random_state=0)
-    grid_search = GridSearchCV(mlp, param_grid, cv=5)
-    grid_search.fit(X0_full, Y0_full)
-    target_only_mlp = grid_search.best_estimator_
-    nn_pool = np.mean(abs(target_only_mlp.predict(X_test) - Y_test) ** 2)
+    # ## Neural Network
+    # param_grid = {
+    #     "hidden_layer_sizes": [(10,), (50,), (100,)],
+    #     "alpha": [0.0001, 0.001, 0.01],
+    # }
+    # mlp = MLPRegressor(max_iter=1000, random_state=0)
+    # grid_search = GridSearchCV(mlp, param_grid, cv=5)
+    # grid_search.fit(X0_full, Y0_full)
+    # target_only_mlp = grid_search.best_estimator_
+    # nn_pool = np.mean(abs(target_only_mlp.predict(X_test) - Y_test) ** 2)
 
     # ML models with transfer learning with conditional quantile matching
     X_test = dat_test[:, 1:]
@@ -303,7 +304,7 @@ for n_0 in [100, 200, 500, 1000, 2000]:
             Y_tensor,
             num_layer=2,
             hidden_dim=100,
-            noise_dim=100,
+            noise_dim=5,
             lr=0.0001,
             num_epochs=1000,
         )
@@ -313,7 +314,7 @@ for n_0 in [100, 200, 500, 1000, 2000]:
     X_source_tensor = torch.cat(X_source_tensor, dim=0)
 
     # Sample response variables from each source data based on the covariates in the target domain
-    N_sam = 3000
+    N_sam = 1000
     Y0_sam = []
     for i in range(len(eng_mod)):
         Y0_sam.append(
@@ -402,9 +403,9 @@ for n_0 in [100, 200, 500, 1000, 2000]:
             xbg_to,
             krr_to,
             nn_to,
-            xbg_pool,
-            krr_pool,
-            nn_pool,
+            # xbg_pool,
+            # krr_pool,
+            # nn_pool,
             xbg_tlcqm,
             krr_tlcqm,
             nn_tlcqm,
@@ -414,9 +415,9 @@ for n_0 in [100, 200, 500, 1000, 2000]:
         "XGBoost_Target_Only",
         "KRR_Target_Only",
         "NN_Target_Only",
-        "XGBoost_Oracle",
-        "KRR_Oracle",
-        "NN_Oracle",
+        # "XGBoost_Oracle",
+        # "KRR_Oracle",
+        # "NN_Oracle",
         "XGBoost_TLCQM",
         "KRR_TLCQM",
         "NN_TLCQM",
@@ -425,4 +426,4 @@ for n_0 in [100, 200, 500, 1000, 2000]:
     res_df["target_size"] = n_0
     res_full = pd.concat([res_full, res_df], axis=0)
 
-res_full.to_csv("./Results/Apartment_" + str(job_id) + ".csv", index=False)
+    res_full.to_csv("./Results/Apartment_" + str(job_id) + ".csv", index=False)
