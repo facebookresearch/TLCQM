@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH --job-name apart_compare        # Set a name for your job. This is especially useful if you have multiple jobs queued.
-#SBATCH --partition medium        # Slurm partition to use
+#SBATCH --partition short        # Slurm partition to use
 #SBATCH --array=1-500               # How many tasks in the array
-#SBATCH --time 3-11:10             # Wall time limit in D-HH:MM
+#SBATCH --time 0-11:10             # Wall time limit in D-HH:MM
 #SBATCH --mem-per-cpu=20000           # Memory limit for each tasks (in MB)
 #SBATCH -o out/apart_comp_%j.out        # File to which STDOUT will be written
 #SBATCH -e out/apart_comp_%j.err        # File to which STDERR will be written
