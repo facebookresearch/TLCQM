@@ -1,9 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-@author: Yikun Zhang
-Last Editing: Jan 2, 2025
-
 Description: Simulation on data with both concept and covariate shifts.
 It contains XGBoost, kernel ridge regression, and neural network models
 applied to the target-only, oracle, and TLCQM data.

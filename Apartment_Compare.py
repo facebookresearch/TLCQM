@@ -1,9 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-@author: Yikun Zhang
-Last Editing: Jan 2, 2026
-
 Description: Application to the UCI Apartment for rent data.
 This file contains code for transfer learning models to be compared with.
 """

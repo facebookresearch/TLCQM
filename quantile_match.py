@@ -1,9 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-@author: Yikun Zhang
-Last Editing: Dec 25, 2025
-
 Description: Code for implementing quantile matching estimator.
 """
 

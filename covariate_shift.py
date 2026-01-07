@@ -2,7 +2,7 @@ import numpy as np
 from cvxopt import matrix, solvers
 
 
-# An implementation of Kernel Mean Matching from https://github.com/vodp/py-kmm
+# An implementation of Kernel Mean Matching adopted from https://github.com/vodp/py-kmm
 # referenres:
 #  1. Gretton, Arthur, et al. "Covariate shift by kernel mean matching." Dataset shift in machine learning 3.4 (2009): 5.
 #  2. Huang, Jiayuan, et al. "Correcting sample selection bias by unlabeled data." Advances in neural information processing systems. 2006.

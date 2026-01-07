@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Code adapted from https://github.com/kw2934/KRR for comparison purposes.
+Code adopted from https://github.com/kw2934/KRR for comparison purposes.
 """
 
 import numpy as np

@@ -1,9 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-@author: Yikun Zhang
-Last Editing: Dec 31, 2025
-
 Description: This script contains the utility functions for simulating data.
 """
 
