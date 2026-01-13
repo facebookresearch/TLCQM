@@ -1,6 +1,10 @@
+# Copyright (c) Meta Platforms, Inc. and affiliates.
+
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
+
 import numpy as np
 from cvxopt import matrix, solvers
-
 
 # An implementation of Kernel Mean Matching adopted from https://github.com/vodp/py-kmm
 # referenres:
