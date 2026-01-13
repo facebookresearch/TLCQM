@@ -250,7 +250,7 @@ data_ap["Dogs"] = data_ap["pets_allowed"].str.contains("Dogs", na=False).astype(
 data_ap.loc[data_ap["bathrooms"].isna(), "bathrooms"] = 0
 data_ap.loc[data_ap["bedrooms"].isna(), "bedrooms"] = 0
 
-source_domain = ["IL", "TN", "WA"]
+source_domain = ["IL", "OH", "WA"]
 target_domain = "FL"
 
 for n_0 in [100, 200, 300, 500]:
@@ -565,4 +565,4 @@ for n_0 in [100, 200, 300, 500]:
     res_df["target_size"] = n_0
     res_full = pd.concat([res_full, res_df], axis=0)
 
-res_full.to_csv("./Results/Apartment_" + str(job_id) + "_Compare.csv", index=False)
+res_full.to_csv("./Results/Apartment_" + str(job_id) + "_Compare_new.csv", index=False)
