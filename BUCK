@@ -22,13 +22,3 @@ python_library(
         "fbsource//third-party/pypi/scipy:scipy",
     ],
 )
-
-python_library(
-    name = "KRR_pseudo_label",
-    srcs = ["KRR_pseudo_label.py"],
-    labels = ["autodeps2_generated"],
-    deps = [
-        "fbsource//third-party/pypi/numpy:numpy",
-        "fbsource//third-party/pypi/scikit-learn:scikit-learn",
-    ],
-)
