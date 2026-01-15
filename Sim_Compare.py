@@ -1,6 +1,11 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+# Copyright (c) Meta Platforms, Inc. and affiliates.
+
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
 """
+@author: Yikun Zhang
+Last Editing: Jan 15, 2025
+
 Description: Simulation on data with both concept and covariate shifts.
 This file contains code for transfer learning models to be compared with.
 """

@@ -3,6 +3,9 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 """
+@author: Yikun Zhang
+Last Editing: Jan 15, 2025
+
 Description: Application to the UCI Apartment for rent data.
 It contains XGBoost, kernel ridge regression, and neural network models
 applied to the target-only, oracle, and TLCQM data.

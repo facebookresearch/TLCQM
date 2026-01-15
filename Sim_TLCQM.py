@@ -1,6 +1,11 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+# Copyright (c) Meta Platforms, Inc. and affiliates.
+
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
 """
+@author: Yikun Zhang
+Last Editing: Jan 15, 2025
+
 Description: Simulation on data with both concept and covariate shifts.
 It contains XGBoost, kernel ridge regression, and neural network models
 applied to the target-only, oracle, and TLCQM data.
@@ -15,7 +20,6 @@ from sklearn.kernel_ridge import KernelRidge
 from xgboost import XGBRegressor
 import torch
 import sys
-import pickle
 from engression import engression
 from quantile_match import quantile_matching_estimate
 from covariate_shift import kernel_mean_matching

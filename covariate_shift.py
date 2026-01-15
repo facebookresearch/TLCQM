@@ -3,13 +3,23 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
+"""
+@author: Yikun Zhang
+Last Editing: Jan 15, 2025
+
+Description: Implementation of Kernel Mean Matching for covariate shift adjustment
+adopted from https://github.com/vodp/py-kmm.
+References:
+    1. Gretton, Arthur, et al. "Covariate shift by kernel mean matching." Dataset shift in machine learning 3.4 (2009): 5.
+    2. Huang, Jiayuan, et al. "Correcting sample selection bias by unlabeled data." Advances in neural information processing systems. 2006.
+"""
+
+# =======================================================================================#
+
 import numpy as np
 from cvxopt import matrix, solvers
 
-# An implementation of Kernel Mean Matching adopted from https://github.com/vodp/py-kmm
-# referenres:
-#  1. Gretton, Arthur, et al. "Covariate shift by kernel mean matching." Dataset shift in machine learning 3.4 (2009): 5.
-#  2. Huang, Jiayuan, et al. "Correcting sample selection bias by unlabeled data." Advances in neural information processing systems. 2006.
+
 def kernel_mean_matching(X, Z, kern="lin", B=1.0, eps=None):
     nx = X.shape[0]
     nz = Z.shape[0]
