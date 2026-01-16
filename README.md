@@ -6,7 +6,7 @@ This repository contains the Python implementation for high-quality data augment
 
 ## Overview
 
-TLCQM is a framework that addresses both **covariate shift** and **concept shift** between source and target domains. It leverages conditional quantile matching to calibrate predictions from multiple source domains to match the target domain distribution, enabling effective transfer learning with limited labeled target data.
+TLCQM is a framework that addresses both **covariate shift** and **concept shift** between source and target domains. It leverages conditional quantile matching to calibrate generated samples from multiple source domains to match the target domain distribution, enabling effective transfer learning with limited labeled target data.
 
 ## Requirements
 
@@ -25,7 +25,7 @@ TLCQM is a framework that addresses both **covariate shift** and **concept shift
 | File | Description |
 |------|-------------|
 | `TLCQM.py` | Main implementation of the TLCQM framework with the `fit_TLCQM()` function |
-| `quantile_match.py` | Quantile matching estimator via iterative procedure |
+| `quantile_match.py` | Quantile matching estimator via an iterative procedure |
 | `covariate_shift.py` | Utilities for handling covariate shift between domains |
 | `utils.py` | Utility functions for data simulation |
 
@@ -33,7 +33,7 @@ TLCQM is a framework that addresses both **covariate shift** and **concept shift
 
 | File | Description |
 |------|-------------|
-| `Sim_TLCQM.py` | Simulation experiments for TLCQM |
+| `Sim_TLCQM.py` | Simulation s for TLCQM |
 | `Sim_TLCQM_Ratio.py` | Simulation with ratio-based analysis |
 | `Sim_Compare.py` | Comparison experiments with baseline methods |
 | `Sim_Compare_Ratio.py` | Ratio-based comparison experiments |
@@ -64,14 +64,19 @@ Each `.py` experiment file has a corresponding `.sbatch` file for HPC cluster su
 import numpy as np
 import torch
 from TLCQM import fit_TLCQM
+from utils import sim_data
 
-# Prepare source datasets
-# Each source is a numpy array of shape (n_samples, d+1)
-# where the first column is the response Y and remaining columns are covariates X
-dat_source = [source1_data, source2_data]
-
-# Prepare labeled target data of shape (n_target, d+1)
-dat_target = target_labeled_data
+# Generate synthetic data with covariate and concept shift
+dat_source, dat0, dat0_full, dat_test0 = sim_data(
+    n_s=1000,           # samples per source
+    n_0=50,             # labeled target samples
+    n_test=5000,        # test samples
+    sig=0.5,            # noise std
+    mu_s=np.ones(5),    # source covariate mean
+    mu_t=np.zeros(5),   # target covariate mean
+    Sigma=np.eye(5),    # covariate covariance
+    beta1=1/np.arange(1, 6)  # response coefficients
+)
 
 # Optionally specify covariates where calibrated responses are produced
 X_dat_tensor = torch.tensor(X_new, dtype=torch.float32)
@@ -134,16 +139,6 @@ sbatch Apartment_TLCQM.sbatch
 
 The `data/` directory contains:
 - `apartments_for_rent_classified_100K.csv`: Real-world apartment rental dataset for experiments
-
-## Results
-
-Experimental results are stored in `Results_Syn/`:
-- `Simulation_Concept_Covariate_TLCQM_*.csv`: Simulation experiment results
-- `Apartment_TLCQM_Results_*.csv`: Apartment data experiment results
-
-Generated figures are stored in `Figures/`:
-- `Apartment_Res.pdf`: Apartment experiment visualization
-- `Sim_Concept_Covariate*.pdf`: Simulation result visualizations
 
 ## Contribute
 
