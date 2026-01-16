@@ -21,6 +21,27 @@ from cvxopt import matrix, solvers
 
 
 def kernel_mean_matching(X, Z, kern="lin", B=1.0, eps=None):
+    """
+    Kernel Mean Matching for covariate shift adjustment.
+
+    Parameters
+    ----------
+        X : np.ndarray
+            Source samples of shape (nx, d).
+        Z : np.ndarray
+            Target samples of shape (nz, d).
+        kern : str
+            Kernel type, either "lin" for linear or "rbf" for radial basis function.
+        B : float
+            Upper bound on the weights.
+        eps : float or None
+            Tolerance parameter. If None, it is set to B / sqrt(nz).
+
+    Returns
+    -------
+        coef : np.ndarray
+            Importance weights for source samples.
+    """
     nx = X.shape[0]
     nz = Z.shape[0]
     if eps is None:

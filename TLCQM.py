@@ -16,7 +16,7 @@ from quantile_match import quantile_matching_estimate
 
 #=======================================================================================#
 
-def fit_TLCQM(dat_source, dat_target, X_dat=None, n_sampler=3000, random_state=None,
+def fit_TLCQM(dat_source, dat_target, X_dat_tensor=None, n_sampler=3000, random_state=None,
     # Engression model arguments
     eng_num_layer=2,
     eng_hidden_dim=100,
@@ -39,7 +39,7 @@ def fit_TLCQM(dat_source, dat_target, X_dat=None, n_sampler=3000, random_state=N
             Source datasets, each of shape (n_s, d+1).
         dat_target : np.ndarray
             Target labeled data of shape (n_0, d+1).
-        X_dat : np.ndarray
+        X_dat_tensor : torch.Tensor or None
             Covariates where calibrated responses are produced.
         n_sampler : int
             Number of pseudo-samples drawn per source for quantile matching.
@@ -90,9 +90,7 @@ def fit_TLCQM(dat_source, dat_target, X_dat=None, n_sampler=3000, random_state=N
         X_source_tensor.append(X_tensor)
         eng_models.append(engressor)
     X_source_tensor = torch.cat(X_source_tensor, dim=0)
-    if X_dat is not None:
-        X_dat_tensor = torch.tensor(X_dat, dtype=torch.float32)
-    else:
+    if X_dat_tensor is None:
         X_dat_tensor = X_source_tensor
 
     # Sample pseudo-responses for target covariates

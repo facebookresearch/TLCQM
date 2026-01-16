@@ -36,8 +36,9 @@ for n_0 in [50, 100, 150]:
         n_s = fac_s * n_0
         d = 5
         np.random.seed(job_id)
-        dat_source, dat0, dat0_full, dat_test = sim_data(n_s=n_s, n_0=n_0, n_test=3000, d=d, sig=0.5, 
-                                                        mu_s=np.ones(d), mu_t=np.zeros(d), Sigma=np.eye(d), beta1=1/np.arange(1, d+1))
+        dat_source, dat0, dat0_full, dat_test = sim_data(n_s=n_s, n_0=n_0, n_test=3000, sig=0.5, 
+                                                        mu_s=np.ones(d), mu_t=np.zeros(d), Sigma=np.eye(d), 
+                                                        beta1=1/np.arange(1, d+1))
         
         # Target-only ML models
         X0 = dat0[:, 1:]

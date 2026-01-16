@@ -194,8 +194,9 @@ for n_0 in [50, 100, 150, 200, 250]:
     for n_s in [100, 200, 500, 1000, 2000]:
         d = 5
         np.random.seed(job_id)
-        dat_source, dat0, dat0_full, dat_test = sim_data(n_s=n_s, n_0=n_0, n_test=5000, d=d, sig=0.5, 
-                                                        mu_s=np.ones(d), mu_t=np.zeros(d), Sigma=np.eye(d), beta1=1/np.arange(1, d+1))
+        dat_source, dat0, dat0_full, dat_test = sim_data(n_s=n_s, n_0=n_0, n_test=5000, sig=0.5, 
+                                                        mu_s=np.ones(d), mu_t=np.zeros(d), Sigma=np.eye(d), 
+                                                        beta1=1/np.arange(1, d+1))
         
         # Prepare data
         X_source = [dat[:, 1:] for dat in dat_source]

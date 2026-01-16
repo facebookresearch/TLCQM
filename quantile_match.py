@@ -13,15 +13,32 @@ import numpy as np
 from sklearn.linear_model import LinearRegression
 
 
-def quantile_matching_estimate(
-    target,
-    source_mat,
-    beta_init=None,
-    stop_eps=1e-8,
-    max_iter=1000,
-    positive=False,
-    verbose=False,
-):
+def quantile_matching_estimate(target, source_mat, beta_init=None, stop_eps=1e-8, max_iter=1000,
+                               positive=False, verbose=False):
+    """
+    Quantile matching estimator via iterative procedure.
+
+    Parameters
+    ----------
+        target : np.ndarray
+            Target responses of shape (n, ).
+        source_mat : np.ndarray
+            Source predicted responses of shape (n, K).
+        beta_init : np.ndarray or None
+            Initial value for quantile matching coefficients.
+        stop_eps : float
+            Stopping criterion for iterative updates.
+        max_iter : int
+            Maximum number of iterations.
+        positive : bool
+            Whether to enforce non-negative coefficients.
+        verbose : bool
+            Whether to print progress.
+    Returns
+    -------
+        cur_beta : np.ndarray
+            Estimated quantile matching coefficients.
+    """
     if beta_init is None:
         lr_mod = LinearRegression(fit_intercept=False, positive=positive).fit(
             source_mat, target
@@ -52,6 +69,21 @@ def quantile_matching_estimate(
 
 
 def direct_quantile_matching(target, source):
+    """
+    Direct quantile matching function.
+
+    Parameters
+    ----------
+        target : np.ndarray
+            Target responses of shape (n, ).
+        source : np.ndarray
+            Source responses of shape (n, ).
+
+    Returns
+    -------
+        matched : np.ndarray
+            Quantile matched source responses.
+    """
     sorted_target = np.sort(target)
     sorted_source = np.sort(source)
     from scipy.interpolate import interp1d
