@@ -1,34 +1,27 @@
 # Transfer Learning Through Conditional Quantile Matching (TLCQM)
 
+This repository contains Python3 implementation for the high-quality data augmentation (or synthetic data generation) for transfer learning tasks proposed in the following paper.
+- Paper Reference: [Y. Zhang, S. Wilkins-Reeves, W. Lee, and A. Hofleitner. Tranfer Learning Through Conditional Quantile Matching.]() (2026+).
 
-# A command line library of tools to easily deploy on-device machine learning demos on Android mobile devices. 
-It solves the need for Machine Learning developers to know how to set up their development environment and which dependencies to install in order to build mobile app demoes of their models. 
+### Requirements
 
-## Examples
-...
+- Python >= 3.10 (earlier version might be applicable).
+- [NumPy](http://www.numpy.org/), [scikit-learn](https://scikit-learn.org/stable/), [PyTorch](https://pytorch.org/) (for neural network models and auto-differentiation), [engression](https://github.com/xwshen51/engression/tree/main/engression-python), and [cvxopt](https://github.com/cvxopt/cvxopt).
+- Optional if only use the main functions: [pandas](https://pandas.pydata.org/) and [Matplotlib](https://matplotlib.org/) (for plotting).
 
-## Requirements
-__________ requires or works with
-* Mac OS X or Linux
-* ...
+### File Descriptions
 
-## Building __________
-...
 
-## Installing __________
-...
 
-## How __________ works
-...
+### Example Code
 
-## Full documentation
-...
+```bash
 
-## Join the __________ community
-* Website:
-* Facebook page:
-* Mailing list
-* irc: 
+```
+
+
+
+## Contribute
 
 See the [CONTRIBUTING](CONTRIBUTING.md) file for how to help out.
 
