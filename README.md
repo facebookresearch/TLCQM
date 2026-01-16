@@ -67,6 +67,8 @@ import torch
 from TLCQM import fit_TLCQM
 from utils import sim_data
 
+np.random.seed(123)
+
 # Generate synthetic data with covariate and concept shift
 dat_source, dat_target, dat0_full, dat_test0 = sim_data(
     n_s=1000,           # samples per source
