@@ -33,13 +33,13 @@ TLCQM is a framework that addresses both **covariate shift** and **concept shift
 
 | File | Description |
 |------|-------------|
-| `Sim_TLCQM.py` | Simulation s for TLCQM |
-| `Sim_TLCQM_Ratio.py` | Simulation with ratio-based analysis |
-| `Sim_Compare.py` | Comparison experiments with baseline methods |
-| `Sim_Compare_Ratio.py` | Ratio-based comparison experiments |
+| `Sim_TLCQM.py` | Simulation code I for TLCQM |
+| `Sim_TLCQM_Ratio.py` | Simulation code II for TLCQM |
+| `Sim_Compare.py` | Comparison code I with baseline methods |
+| `Sim_Compare_Ratio.py` | Comparison code I with baseline methods |
 | `Syn_Sim_Res.py` | Synthetic simulation result processing |
 
-### Real-World Experiments
+### Real-World Data Experiments
 
 | File | Description |
 |------|-------------|
@@ -67,7 +67,7 @@ from TLCQM import fit_TLCQM
 from utils import sim_data
 
 # Generate synthetic data with covariate and concept shift
-dat_source, dat0, dat0_full, dat_test0 = sim_data(
+dat_source, dat_target, dat0_full, dat_test0 = sim_data(
     n_s=1000,           # samples per source
     n_0=50,             # labeled target samples
     n_test=5000,        # test samples
@@ -78,14 +78,11 @@ dat_source, dat0, dat0_full, dat_test0 = sim_data(
     beta1=1/np.arange(1, 6)  # response coefficients
 )
 
-# Optionally specify covariates where calibrated responses are produced
-X_dat_tensor = torch.tensor(X_new, dtype=torch.float32)
-
 # Fit TLCQM model
 Y_matched, beta_hat = fit_TLCQM(
     dat_source=dat_source,
     dat_target=dat_target,
-    X_dat_tensor=X_dat_tensor,
+    X_dat_tensor=None,
     n_sampler=3000,
     random_state=42,
     # Engression model hyperparameters
@@ -104,25 +101,6 @@ Y_matched, beta_hat = fit_TLCQM(
 
 # Y_matched: calibrated responses for X_dat_tensor
 # beta_hat: estimated quantile matching coefficients
-```
-
-### Simulating Data
-
-```python
-from utils import sim_data
-import numpy as np
-
-# Generate synthetic data with covariate and concept shift
-dat_source, dat0, dat0_full, dat_test0 = sim_data(
-    n_s=1000,           # samples per source
-    n_0=50,             # labeled target samples
-    n_test=5000,        # test samples
-    sig=0.5,            # noise std
-    mu_s=np.ones(5),    # source covariate mean
-    mu_t=np.zeros(5),   # target covariate mean
-    Sigma=np.eye(5),    # covariate covariance
-    beta1=1/np.arange(1, 6)  # response coefficients
-)
 ```
 
 ### Running Experiments on HPC
