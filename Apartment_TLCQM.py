@@ -4,7 +4,7 @@
 # LICENSE file in the root directory of this source tree.
 """
 @author: Yikun Zhang
-Last Editing: Jan 15, 2025
+Last Editing: Jan 15, 2026
 
 Description: Application to the UCI Apartment for rent data.
 It contains XGBoost, kernel ridge regression, and neural network models
