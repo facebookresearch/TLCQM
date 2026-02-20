@@ -5,7 +5,7 @@
 
 """
 @author: Yikun Zhang
-Last Editing: Jan 15, 2025
+Last Editing: Jan 15, 2026
 
 Description: Implementation of Kernel Mean Matching for covariate shift adjustment
 adopted from https://github.com/vodp/py-kmm.

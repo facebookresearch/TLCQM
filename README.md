@@ -2,7 +2,7 @@
 
 This repository contains the Python implementation for high-quality data augmentation and synthetic data generation in transfer learning tasks.
 
-**Paper Reference**: Y. Zhang, S. Wilkins-Reeves, W. Lee, and A. Hofleitner. *Transfer Learning Through Conditional Quantile Matching.* (2026+).
+**Paper Reference**: Y. Zhang, S. Wilkins-Reeves, W. Lee, and A. Hofleitner. *[Transfer Learning Through Conditional Quantile Matching](https://arxiv.org/abs/2602.02358).* (2026+).
 
 ## Overview
 
