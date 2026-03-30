@@ -144,7 +144,7 @@ for n_0 in [100, 200, 300, 500]:
             "Cats",
             "Dogs",
         ],
-    ]
+    ].copy()
     data_sub["price"] = np.log(data_sub["price"])
     dat0 = data_sub.sample(n=n_0, random_state=job_id)
     dat_pool.append(dat0)
@@ -355,7 +355,7 @@ for n_0 in [100, 200, 300, 500]:
 
     # Kernel mean matching for covariate shift correction
     X_source = X_source_tensor.detach().numpy()
-    kmm_weights = kernel_mean_matching(X_test, X_source, kern="rbf", B=10)[:, 0]
+    kmm_weights = kernel_mean_matching(X_dat0, X_source, kern="rbf", B=10)[:, 0]
 
     X_comb = np.concatenate([X_source, X_dat0], axis=0)
     Y_comb = np.concatenate([Y_matched, Y0], axis=0)
@@ -395,7 +395,7 @@ for n_0 in [100, 200, 300, 500]:
     }
     mlp = MLPRegressor(max_iter=1000, random_state=0)
     grid_search = GridSearchCV(mlp, param_grid, cv=5)
-    grid_search.fit(X_comb, Y_comb)
+    grid_search.fit(X_comb, Y_comb, sample_weight=weights)
     target_only_mlp = grid_search.best_estimator_
     nn_tlcqm = np.mean(abs(target_only_mlp.predict(X_test) - Y_test) ** 2)
 
