@@ -4,7 +4,7 @@
 # LICENSE file in the root directory of this source tree.
 """
 @author: Yikun Zhang
-Last Editing: Mar 25, 2026
+Last Editing: Jul 24, 2026
 
 Description: Simulation on data with both concept and covariate shifts.
 It contains XGBoost, kernel ridge regression, and neural network models
@@ -13,16 +13,15 @@ applied to the target-only, oracle, and TLCQM data.
 
 import numpy as np
 import pandas as pd
+import os
 from sklearn.model_selection import GridSearchCV
 from utils import sim_data
 from sklearn.neural_network import MLPRegressor
 from sklearn.kernel_ridge import KernelRidge
 from xgboost import XGBRegressor
-import torch
 import sys
-from engression import engression
-from quantile_match import quantile_matching_estimate
-from covariate_shift import kernel_mean_matching
+from covariate_shift_conditional import kernel_mean_matching
+from TLCQM_conditional import fit_TLCQM_conditional
 
 job_id = int(sys.argv[1])
 print(job_id)
@@ -31,14 +30,12 @@ print(job_id)
 
 
 res_full = pd.DataFrame()
-for n_0 in [50, 100, 150]:
-    for fac_s in [1, 2, 5, 10, 15, 20, 30]:
-        n_s = fac_s * n_0
+for n_0 in [50, 100, 150, 200, 250]:
+    for n_s in [100, 200, 500, 1000, 2000, 5000]:
         d = 5
         np.random.seed(job_id)
-        dat_source, dat0, dat0_full, dat_test = sim_data(n_s=n_s, n_0=n_0, n_test=3000, sig=0.5, 
-                                                        mu_s=np.ones(d), mu_t=np.zeros(d), Sigma=np.eye(d), 
-                                                        beta1=1/np.arange(1, d+1))
+        dat_source, dat0, dat0_full, dat_test = sim_data(n_s=n_s, n_0=n_0, n_test=3000, sig=0.5, mu_s=np.ones(d), 
+                                                         mu_t=np.zeros(d), Sigma=np.eye(d), beta1=1/np.arange(1, d+1))
         
         # Target-only ML models
         X0 = dat0[:, 1:]
@@ -79,7 +76,6 @@ for n_0 in [50, 100, 150]:
         grid_search.fit(X0, Y0)
         target_only_mlp = grid_search.best_estimator_
         nn_to = np.mean(abs(target_only_mlp.predict(X_test) - Y_test)**2)
-
 
         # Oracle ML models
         X0_full = dat0_full[:, 1:]
@@ -124,39 +120,27 @@ for n_0 in [50, 100, 150]:
         X_dat0 = dat0[:, 1:]
         Y0 = dat0[:, 0]
 
-        # Fit the engression generative model on each source data
-        eng_mod = []
-        X_source_tensor = []
-        for i in range(len(dat_source)):
-            Y_tensor = torch.tensor(dat_source[i][:, 0].reshape(-1,1), dtype=torch.float32)
-            X_tensor = torch.tensor(dat_source[i][:, 1:], dtype=torch.float32)
-            engressor = engression(X_tensor, Y_tensor, num_layer=2, hidden_dim=100, noise_dim=5, lr=0.001, num_epochs=1000)
-            X_source_tensor.append(X_tensor)
-            eng_mod.append(engressor)
-        X_dat0_tensor = torch.tensor(X_dat0, dtype=torch.float32)
-        X_source_tensor = torch.cat(X_source_tensor, dim=0)
-
-        # Sample response variables from each source data based on the covariates in the target domain
-        N_sam = 3000
-        Y0_sam = []
-        for i in range(len(eng_mod)):
-            Y0_sam.append(eng_mod[i].sample(X_dat0_tensor, sample_size=N_sam).detach().numpy().reshape(-1,1))
-        Y0_sam = np.concatenate(Y0_sam, axis=1)
-        Y0_sam_arr = np.concatenate([np.ones([Y0_sam.shape[0],1]), Y0_sam], axis=1)
-
-        # Perform quantile matching to learn the adjustment coefficients
-        beta_sol = quantile_matching_estimate(np.repeat(Y0, N_sam), Y0_sam_arr, beta_init=None, stop_eps=1e-8, max_iter=1000, verbose=False)
-
-        Y_source_pred = []
-        for i in range(len(eng_mod)):
-            Y_source_pred.append(eng_mod[i].predict(X_source_tensor, sample_size=200).detach().numpy().reshape(-1,1))
-        Y_source_pred = np.concatenate(Y_source_pred, axis=1)
-        Y_source_pred = np.concatenate([np.ones([Y_source_pred.shape[0],1]), Y_source_pred], axis=1)
-        Y_matched = np.dot(Y_source_pred, beta_sol)
+        X_source = np.concatenate([dat[:, 1:] for dat in dat_source], axis=0)
+        Y_matched, beta_sol = fit_TLCQM_conditional(
+            dat_source,
+            dat0,
+            X_dat_tensor=X_source,
+            n_sampler=3000,
+            random_state=job_id,
+            eng_num_epochs=1000,
+            eng_pred_sample_size=200,
+            qm_beta_bound=10,
+            qm_n_restarts=10,
+            pseudo_label_mode="mean",
+        )
 
         # Kernel mean matching for covariate shift correction
-        X_source = X_source_tensor.detach().numpy()
-        kmm_weights = kernel_mean_matching(X_dat0, X_source, kern='rbf', B=10)[:,0]
+        kmm_weights = np.concatenate([
+            kernel_mean_matching(
+                X_dat0, dat[:, 1:], kern="rbf", B=10
+            )[:, 0]
+            for dat in dat_source
+        ])
 
         X_comb = np.concatenate([X_source, X_dat0], axis=0)
         Y_comb = np.concatenate([Y_matched, Y0], axis=0)
@@ -206,6 +190,9 @@ for n_0 in [50, 100, 150]:
         res_df['target_size'] = n_0
         res_full = pd.concat([res_full, res_df], axis=0)
 
-res_full.to_csv('./Results/Simulation_Concept_Covariate_'+str(job_id)+'_new2.csv', index=False)
-
-
+os.makedirs("./Results", exist_ok=True)
+res_full.to_csv(
+    "./Results/Simulation_Concept_Covariate_" + str(job_id)
+    + "_conditional_mean_grid.csv",
+    index=False,
+)
