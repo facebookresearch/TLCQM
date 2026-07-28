@@ -14,7 +14,7 @@ import numpy as np
 #=======================================================================================#
 
 
-def sim_data(n_s=1000, n_0=50, n_test=5000, sig=0.5, mu_s=np.ones(5), mu_t=np.zeros(5), 
+def sim_data(n_s=1000, n_0=50, n_test=5000, sig=0.5, mu_s=np.ones(5), mu_t=np.ones(5), 
              Sigma=np.eye(5), beta1=1/np.arange(1, 6)):
     """
     Simulate source and target datasets under covariate shift and concept shift.
