@@ -8,7 +8,7 @@ Last Editing: Mar 24, 2026
 
 Description: Simulation on data with both concept and covariate shifts.
 It contains XGBoost, kernel ridge regression, and neural network models
-applied to the source-only and naively combined data.
+applied to the source-only and naive pooling data.
 """
 
 import numpy as np

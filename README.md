@@ -1,22 +1,36 @@
 # Transfer Learning Through Conditional Quantile Matching (TLCQM)
 
-This repository contains the Python implementation for high-quality data augmentation and synthetic data generation in transfer learning tasks.
+This repository contains the Python implementation and experiment workflow for transfer learning through conditional quantile matching.
 
-**Paper Reference**: Y. Zhang, S. Wilkins-Reeves, W. Lee, and A. Hofleitner. *[Transfer Learning Through Conditional Quantile Matching](https://arxiv.org/abs/2602.02358).* (2026+).
+**Paper Reference**: Y. Zhang, S. Wilkins-Reeves, W. Lee, and A. Hofleitner. *[Transfer Learning Through Conditional Quantile Matching](https://arxiv.org/abs/2602.02358).* (2026) (Accepted by the NeurIPS 2026).
 
 ## Overview
 
-TLCQM is a framework that addresses both **covariate shift** and **concept shift** between source and target domains. It leverages conditional quantile matching to calibrate generated samples from multiple source domains to match the target domain distribution, enabling effective transfer learning with limited labeled target data.
+TLCQM addresses both **covariate shift** and **concept shift** between source and target domains. It fits conditional generative models to the source domains and calibrates their generated responses against the labeled target data using conditional CRPS matching. The calibrated source responses can then augment a small labeled target sample for downstream regression.
+
+The repository contains the TLCQM implementation, simulation studies, experiments on the publicly available apartment data, precomputed aggregate results, and the three notebooks used to generate the paper's figures and tables.
 
 ## Requirements
 
 - Python >= 3.10 (earlier versions might be applicable)
-- [NumPy](http://www.numpy.org/)
-- [scikit-learn](https://scikit-learn.org/stable/)
-- [PyTorch](https://pytorch.org/) (for neural network models and auto-differentiation)
+- [NumPy](https://numpy.org/)
+- [pandas](https://pandas.pydata.org/)
+- [SciPy](https://scipy.org/)
+- [scikit-learn](https://scikit-learn.org/)
+- [PyTorch](https://pytorch.org/)
+- [XGBoost](https://xgboost.readthedocs.io/)
 - [engression](https://github.com/xwshen51/engression/tree/main/engression-python)
-- [cvxopt](https://github.com/cvxopt/cvxopt)
-- Optional: [pandas](https://pandas.pydata.org/) and [Matplotlib](https://matplotlib.org/) (for data processing and plotting)
+- [CVXOPT](https://cvxopt.org/)
+- [Matplotlib](https://matplotlib.org/)
+- [Jupyter](https://jupyter.org/)
+
+Install the Python dependencies with:
+
+```bash
+python -m pip install -r requirements.txt
+```
+
+CVXOPT is used by kernel mean matching when available. The implementation also contains a projected gradient fallback if CVXOPT cannot solve a problem.
 
 ## File Descriptions
 
@@ -24,107 +38,185 @@ TLCQM is a framework that addresses both **covariate shift** and **concept shift
 
 | File | Description |
 |------|-------------|
-| `TLCQM.py` | Main implementation of the TLCQM framework with the `fit_TLCQM()` function |
-| `quantile_match.py` | Quantile matching estimator via an iterative procedure |
-| `covariate_shift.py` | Utilities for handling covariate shift between domains |
-| `utils.py` | Utility functions for data simulation |
+| `TLCQM_conditional.py` | Main conditional TLCQM implementation with `fit_TLCQM_conditional()` and the `fit_TLCQM` alias |
+| `quantile_match_conditional.py` | Conditional CRPS objective, scoring, and coefficient estimation |
+| `covariate_shift_conditional.py` | Kernel mean matching for covariate-shift correction |
+| `utils.py` | Data generators for the main synthetic experiments |
+| `utils_mixture.py` | Data generators for the non-spherical Gaussian-mixture experiments |
 
 ### Simulation Scripts
 
 | File | Description |
 |------|-------------|
-| `Sim_TLCQM.py` | Simulation code I for TLCQM |
-| `Sim_TLCQM_Ratio.py` | Simulation code II for TLCQM |
-| `Sim_Compare.py` | Comparison code I with baseline methods |
-| `Sim_Compare_Ratio.py` | Comparison code I with baseline methods |
-| `Syn_Sim_Res.py` | Synthetic simulation result processing |
+| `Sim_TLCQM_Ratio_Conditional.py` | Main source-to-target ratio experiment for conditional TLCQM |
+| `Sim_TLCQM_Conditional.py` | Main source-size and target-size grid experiment |
+| `Sim_Naive_Ratio.py` | Source-only and naive-pooling baselines for the ratio experiment |
+| `Sim_Mixup_Ratio.py` | Mixup baselines for the ratio experiment |
+| `Sim_Compare_Ratio.py` | Additional transfer-learning comparisons for the ratio experiment |
+| `Sim_TLCQM_Ratio_Abla_Conditional.py` | Engression, mean-matching, optimal-transport, and TLCQM ablation study |
+| `Sim_TLCQM_Diagnostic_Conditional.py` | Conditional-distribution diagnostic experiments |
+| `Sim_TLCQM_Ratio_Mixture.py` | TLCQM ratio experiment under a Gaussian-mixture design |
+| `Sim_TLCQM_Conditional_Mixture.py` | TLCQM sample-size grid under a Gaussian-mixture design |
+| `Sim_Compare_Mixture.py` | Comparison methods under a Gaussian-mixture design |
+| `Sim_Naive_Method.py` | Auxiliary non-ratio naive-pooling and source-only experiment; not used by the three publication notebooks |
 
 ### Real-World Data Experiments
 
 | File | Description |
 |------|-------------|
-| `Apartment_TLCQM.py` | TLCQM experiments on apartment rental data |
-| `Apartment_Compare.py` | Baseline comparisons on apartment rental data |
+| `Apartment_TLCQM_Conditional.py` | Conditional TLCQM, target-only, and oracle experiments on the apartment data |
+| `Apartment_Naive_Mixup.py` | Source-only, naive-pooling, and Mixup apartment baselines |
+| `Apartment_Compare.py` | Additional apartment transfer-learning comparisons |
 
-
-### Visualization
+### Result Aggregation
 
 | File | Description |
 |------|-------------|
-| `Figure_Plotting.ipynb` | Jupyter notebook for generating publication figures |
+| `Syn_Sim_Res_Conditional.py` | Combines the repeated raw job outputs in `Results/` into the 13 aggregate CSV files used by the notebooks |
+
+### Visualization and Tables
+
+| File | Description |
+|------|-------------|
+| `Figure_Plotting.ipynb` | Main simulation and apartment figures and tables |
+| `Results From Ablation Studies.ipynb` | Ablation table and diagnostic figures |
+| `Mixture_Simulation.ipynb` | Gaussian-mixture simulation tables and plots |
+
+### Output Directories
+
+| Directory | Description |
+|-----------|-------------|
+| `Results/` | Raw per-job CSV files; generated locally and ignored by Git |
+| `Results_Syn/` | Aggregated CSV files consumed by the notebooks |
+| `Tables/` | Tables generated by the notebooks |
+| `Figures/` | PDF figures generated by the notebooks |
+| `out/` | SLURM standard-output and error logs; generated locally and ignored by Git |
 
 ### SLURM Batch Scripts
 
-Each `.py` experiment file has a corresponding `.sbatch` file for HPC cluster submission.
+Each experiment script has a corresponding `.sbatch` file. The synthetic experiments use 1,000 repeated jobs, while the apartment and diagnostic experiments use 500. Before submitting jobs, adapt the partition, email address, Python module, and virtual-environment activation commands to your cluster.
 
 ## Usage
+
+Run all commands from the repository root (`TLCQM/`).
+
+### Installation
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+
+mkdir -p Results Results_Syn Tables Figures out
+```
 
 ### Basic Example
 
 ```python
 import numpy as np
-import torch
-from TLCQM import fit_TLCQM
+
+from TLCQM_conditional import fit_TLCQM_conditional
 from utils import sim_data
 
-np.random.seed(123)
+random_state = 123
+np.random.seed(random_state)
 
-# Generate synthetic data with covariate and concept shift
-dat_source, dat_target, dat0_full, dat_test0 = sim_data(
-    n_s=1000,           # samples per source
-    n_0=50,             # labeled target samples
-    n_test=5000,        # test samples
-    sig=0.5,            # noise std
-    mu_s=np.ones(5),    # source covariate mean
-    mu_t=np.zeros(5),   # target covariate mean
-    Sigma=np.eye(5),    # covariate covariance
-    beta1=1/np.arange(1, 6)  # response coefficients
+# Generate two source domains and a small labeled target sample.
+dat_source, dat_target, _, _ = sim_data(
+    n_s=1000,
+    n_0=50,
+    n_test=5000,
+    sig=0.5,
+    mu_s=np.ones(5),
+    mu_t=np.zeros(5),
+    Sigma=np.eye(5),
+    beta1=1 / np.arange(1, 6),
 )
 
-# Fit TLCQM model
-Y_matched, beta_hat = fit_TLCQM(
+X_source = np.concatenate([dat[:, 1:] for dat in dat_source], axis=0)
+
+# Calibrate conditional source means against the target sample.
+Y_matched, beta_hat = fit_TLCQM_conditional(
     dat_source=dat_source,
     dat_target=dat_target,
-    X_dat_tensor=None,
+    X_dat_tensor=X_source,
     n_sampler=3000,
-    random_state=42,
-    # Engression model hyperparameters
-    eng_num_layer=2,
-    eng_hidden_dim=100,
-    eng_noise_dim=5,
-    eng_lr=0.001,
+    random_state=random_state,
     eng_num_epochs=1000,
-    eng_pred_sample_size=500,
-    # Quantile matching hyperparameters
-    qm_stop_eps=1e-8,
-    qm_max_iter=1000,
-    qm_positive=False,
-    qm_verbose=False
+    eng_pred_sample_size=200,
+    qm_beta_bound=10.0,
+    qm_n_restarts=10,
+    pseudo_label_mode="mean",
 )
 
-# Y_matched: calibrated responses for X_dat_tensor
-# beta_hat: estimated quantile matching coefficients
+# Y_matched contains one calibrated pseudo-response for each row of X_source.
+# beta_hat contains the fitted conditional quantile-matching coefficients.
 ```
 
-### Running Experiments on HPC
+Passing `random_state` seeds both NumPy and PyTorch inside the TLCQM helper. The experiment drivers pass their SLURM array `job_id` as this seed.
+
+### Running Experiments on SLURM
+
+Create `Results/` and `out/` before submitting jobs, then submit the experiment families needed for the publication workflow:
 
 ```bash
-# Run simulation experiment
-sbatch Sim_TLCQM.sbatch
+# Main simulations
+sbatch Sim_TLCQM_Ratio_Conditional.sbatch
+sbatch Sim_TLCQM_Conditional.sbatch
+sbatch Sim_Naive_Ratio.sbatch
+sbatch Sim_Mixup_Ratio.sbatch
+sbatch Sim_Compare_Ratio.sbatch
 
-# Run apartment data experiment
-sbatch Apartment_TLCQM.sbatch
+# Ablation and diagnostics
+sbatch Sim_TLCQM_Ratio_Abla_Conditional.sbatch
+sbatch Sim_TLCQM_Diagnostic_Conditional.sbatch
+
+# Gaussian-mixture simulations
+sbatch Sim_TLCQM_Ratio_Mixture.sbatch
+sbatch Sim_TLCQM_Conditional_Mixture.sbatch
+sbatch Sim_Compare_Mixture.sbatch
+
+# Apartment experiments
+sbatch Apartment_TLCQM_Conditional.sbatch
+sbatch Apartment_Naive_Mixup.sbatch
+sbatch Apartment_Compare.sbatch
 ```
+
+After every required array job has finished, aggregate the raw CSV files:
+
+```bash
+python Syn_Sim_Res_Conditional.py
+```
+
+The aggregation script expects all job indices to be present: 1--1,000 for the main simulations and 1--500 for the apartment and diagnostic experiments.
+
+### Generating Figures and Tables
+
+Precomputed aggregate files are included in `Results_Syn/`, so the notebooks can be run without repeating the full simulation study:
+
+```bash
+jupyter notebook Figure_Plotting.ipynb
+jupyter notebook "Results From Ablation Studies.ipynb"
+jupyter notebook Mixture_Simulation.ipynb
+```
+
+The notebooks write their outputs to `Figures/` and `Tables/`.
 
 ## Data
 
-The `data/` directory contains:
-- `apartments_for_rent_classified_100K.csv`: Real-world apartment rental dataset for experiments
+The `data/` directory contains `apartments_for_rent_classified_100K.csv`, the apartment-rental dataset used by the real-world experiments. The apartment scripts read this file relative to the repository root.
+
+## Reproducibility Notes
+
+- The repeated experiment index (`job_id`) is used as the simulation seed.
+- Conditional TLCQM passes the same seed to NumPy and PyTorch through `random_state`.
+- The precomputed files in `Results_Syn/` contain 1,000 repetitions per synthetic setting and 500 repetitions per apartment or diagnostic setting.
 
 ## Contribute
 
-See the [CONTRIBUTING](CONTRIBUTING.md) file for how to help out.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
 
 ## License
 
-TLCQM is MIT licensed, as found in the [LICENSE](LICENSE.md) file.
+TLCQM is MIT licensed, as described in [LICENSE.md](LICENSE.md).

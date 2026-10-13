@@ -32,6 +32,27 @@ def synthesize_pair(file_name1, file_name2, B, output_name):
         output_name, index=False
     )
 
+B = 1000
+res_all = pd.DataFrame()
+for b in range(1, B+1):
+    res_tmp = pd.read_csv('./Results/Simulation_Concept_Covariate_'+str(b)+'_naive2.csv')
+    res_all = pd.concat([res_all, res_tmp], axis=0)
+res_all = res_all.reset_index(drop=True)
+res_all.to_csv('./Results_Syn/Simulation_Concept_Covariate_TLCQM_naive2.csv', index=False)
+
+B = 1000
+res_all = pd.DataFrame()
+for b in range(1, B+1):
+    res_tmp = pd.read_csv('./Results/Simulation_Concept_Covariate_'+str(b)+'_mixup2.csv')
+    res_all = pd.concat([res_all, res_tmp], axis=0)
+res_all = res_all.reset_index(drop=True)
+res_all.to_csv('./Results_Syn/Simulation_Concept_Covariate_TLCQM_mixup2.csv', index=False)
+
+synthesize(
+    "./Results/Simulation_Concept_Covariate_{}_Compare_new2.csv",
+    1000,
+    "./Results_Syn/Simulation_Concept_Covariate_TLCQM_Compare.csv",
+)
 
 synthesize(
     "./Results/Simulation_Concept_Covariate_{}_conditional_mean.csv",
@@ -75,4 +96,22 @@ synthesize(
     "./Results/Simulation_Concept_Covariate_{}_conditional_mean_grid.csv",
     1000,
     "./Results_Syn/Simulation_Concept_Covariate_TLCQM_Conditional_Mean_Grid.csv",
+)
+
+synthesize(
+    "./Results/Simulation_Concept_Covariate_{}_mixture_conditional_mean.csv",
+    1000,
+    "./Results_Syn/Simulation_Concept_Covariate_TLCQM_Mixture_Conditional_Mean.csv",
+)
+
+synthesize(
+    "./Results/Simulation_Concept_Covariate_{}_mixture_conditional_mean_grid.csv",
+    1000,
+    "./Results_Syn/Simulation_Concept_Covariate_TLCQM_Mixture_Conditional_Mean_Grid.csv",
+)
+
+synthesize(
+    "./Results/Simulation_Concept_Covariate_{}_mixture_Compare.csv",
+    1000,
+    "./Results_Syn/Simulation_Concept_Covariate_TLCQM_Mixture_Compare.csv",
 )

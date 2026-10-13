@@ -1,0 +1,42 @@
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Virtual environments and local environment files
+.venv/
+venv/
+env/
+ENV/
+.env
+.env.*
+!.env.example
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Packaging artifacts
+build/
+dist/
+*.egg-info/
+
+# Raw experiment outputs and scheduler logs
+# Published aggregates in Results_Syn/, Tables/, and Figures/ remain tracked.
+Results/
+out/
+slurm-*.out
+*.out
+*.err
+
+# Editors and operating systems
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db

@@ -8,7 +8,7 @@ Last Editing: Mar 24, 2026
 
 Description: Simulation on data with both concept and covariate shifts.
 It contains XGBoost, kernel ridge regression, and neural network models
-applied to the target-only, oracle, and TLCQM data.
+applied to the naive combined and source-only data.
 """
 
 import numpy as np

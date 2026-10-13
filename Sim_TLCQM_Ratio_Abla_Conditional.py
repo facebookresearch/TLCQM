@@ -84,7 +84,7 @@ def crps_ensemble(y_true, y_sample):
     """
     CRPS for ensemble/sample forecasts:
     CRPS(F, y) = E|X - y| - 0.5 E|X - X'|
-    where X, X' ~ F iid.
+    where X, X' are iid from F.
 
     y_true: shape (n,)
     y_sample: shape (n, M)
@@ -131,7 +131,8 @@ def fit_and_eval_models(X_train, y_train, X_test, y_test, sample_weight=None):
         'hidden_layer_sizes': [(10,), (50,), (100,)],
         'alpha': [0.0001, 0.001, 0.01],
     }
-    gs = GridSearchCV(MLPRegressor(max_iter=1000, random_state=0), param_grid, cv=5)
+    gs = GridSearchCV(MLPRegressor(max_iter=1000, random_state=0), param_grid, cv=5, 
+                      scoring='neg_mean_squared_error')
     gs.fit(X_train, y_train, sample_weight=sample_weight)
     out['NN'] = np.mean((gs.best_estimator_.predict(X_test) - y_test) ** 2)
 
@@ -147,7 +148,7 @@ def fit_engression_models(dat_source):
         engressor = engression(
             X_tensor, Y_tensor,
             num_layer=2, hidden_dim=100, noise_dim=5,
-            lr=0.001, num_epochs=1000
+            lr=0.001, num_epochs=1000, verbose=False
         )
         eng_mod.append(engressor)
         X_source_tensor.append(X_tensor)
@@ -210,23 +211,49 @@ for n_0 in [50, 100, 150]:
         X_test = dat_test[:, 1:]
         Y_test = dat_test[:, 0]
 
+        # Reseeding for reproducibility of torch models
+        np.random.seed(job_id)
+        torch.manual_seed(job_id)
+
         eng_mod, X_source_tensor = fit_engression_models(dat_source)
         X_dat0_tensor = torch.tensor(X_dat0, dtype=torch.float32)
 
-        X_source = X_source_tensor.detach().numpy()
+        # Keep the original precision for downstream model fitting, as in the main TLCQM simulation.
+        X_source = np.concatenate([dat[:, 1:] for dat in dat_source], axis=0)
 
-        # You currently use X_test in KMM; if you want training-time weighting,
-        # X_dat0 is usually the more natural target sample here.
+        # Match fit_TLCQM_conditional's random-draw order: target CRPS samples
+        # first, followed by the source conditional means.
+        N_sam = 3000
+        Y0_sam = sample_responses(eng_mod, X_dat0_tensor, n_sam=N_sam)
+        Y0_sam = Y0_sam.reshape(len(Y0), N_sam, len(eng_mod))
+        beta_sol = conditional_crps_estimate(
+            Y0,
+            Y0_sam,
+            beta_init=None,
+            stop_eps=1e-8,
+            max_iter=1000,
+            beta_bound=10,
+            n_restarts=10,
+            random_state=job_id,
+            verbose=False,
+        )
+
+        M_source = predict_means(eng_mod, X_source_tensor, sample_size=200)
+        Z_source_qm = np.column_stack(
+            [np.ones(M_source.shape[0]), M_source]
+        )
+        Y_tlcqm = Z_source_qm @ beta_sol
+
+        # This additional ablation-only draw happens after TLCQM construction.
+        M_target = predict_means(eng_mod, X_dat0_tensor, sample_size=200)
+
+        # Compute KMM weights for source samples relative to target samples.
         kmm_weights = np.concatenate([
             kernel_mean_matching(
                 X_dat0, dat[:, 1:], kern="rbf", B=10
             )[:, 0]
             for dat in dat_source
         ])
-
-        # Predictive means on target/source covariates
-        M_target = predict_means(eng_mod, X_dat0_tensor, sample_size=200)   # shape (n0, K)
-        M_source = predict_means(eng_mod, X_source_tensor, sample_size=200) # shape (ns_total, K)
 
         # ----- (i) Engression only: no calibration -----
         Y_eng_only = M_source.mean(axis=1)
@@ -257,25 +284,6 @@ for n_0 in [50, 100, 150]:
         res_mean_match = fit_and_eval_models(X_comb, Y_comb, X_test, Y_test, sample_weight=weights)
 
         # ----- (iii) TLCQM: conditional CRPS matching -----
-        N_sam = 3000
-        Y0_sam = sample_responses(eng_mod, X_dat0_tensor, n_sam=N_sam)
-        Y0_sam = Y0_sam.reshape(len(Y0), N_sam, len(eng_mod))
-        beta_sol = conditional_crps_estimate(
-            Y0,
-            Y0_sam,
-            beta_init=None,
-            stop_eps=1e-8,
-            max_iter=1000,
-            beta_bound=10,
-            n_restarts=10,
-            random_state=job_id,
-            verbose=False,
-        )
-
-        Z_source_qm = np.column_stack(
-            [np.ones(M_source.shape[0]), M_source]
-        )
-        Y_tlcqm = Z_source_qm @ beta_sol
 
         X_comb = np.concatenate([X_source, X_dat0], axis=0)
         Y_comb = np.concatenate([Y_tlcqm, Y0], axis=0)
@@ -350,7 +358,6 @@ for n_0 in [50, 100, 150]:
         res_full = pd.concat([res_full, res_df], axis=0)
 
 res_full.to_csv(
-    "./Results/Simulation_Concept_Covariate_" + str(job_id)
-    + "_conditional_mean_abla.csv",
+    "./Results/Simulation_Concept_Covariate_" + str(job_id) + "_conditional_mean_abla.csv",
     index=False,
 )

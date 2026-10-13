@@ -1,0 +1,13 @@
+# Core scientific-computing and modeling dependencies
+numpy>=1.24
+pandas>=2.0
+scipy>=1.10
+scikit-learn>=1.3
+torch>=2.0
+xgboost>=2.0
+engression==0.1.14
+cvxopt>=1.3
+
+# Notebook and figure generation
+matplotlib>=3.7
+jupyter>=1.0
